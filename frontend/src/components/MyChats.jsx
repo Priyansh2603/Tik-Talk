@@ -3,12 +3,13 @@ import { ChatState } from '../Context/chatProvider';
 import { Box, Stack, Text} from "@chakra-ui/layout";
 import axios from 'axios';
 import { GrAdd } from "react-icons/gr";
-import {Button} from "@chakra-ui/react"
+import {Avatar, Button} from "@chakra-ui/react"
 import { Toaster,toast } from 'react-hot-toast';
 import ChatLoading from './ChatLoading';
 import { getSender } from '../config/ChatLogics';
 import GroupModal from './Miscelleneous/GroupModal';
 import { GoDotFill } from "react-icons/go";
+import { socket } from '../socket';
 export default function MyChats({fetchAgain}) {
   const  setSelectedChat = ChatState().setSelectedChat;
   const  {unseen,setUnseen} = ChatState();
@@ -26,13 +27,13 @@ export default function MyChats({fetchAgain}) {
             },
           };
           // console.log("Token for fetching ",user.token)
-          const { data } = await axios.get(`${process.env.APP_URL}/chat`, {
+          const { data } = await axios.get(`${process.env.REACT_APP_URL}/chat`, {
             headers:{
               "Content-type": "application/json",
               Authorization: `Bearer ${user.token}`,
           }
           });
-          toast.success("Chats Found!",{position:'bottom-center',style:{"backgroundColor":'blanchedalmond'}},)
+          // toast.success("Chats Found!",{position:'bottom-center',style:{"backgroundColor":'blanchedalmond'}},)
           setChats(data);
         } catch (error) {
           // console.log(error.message)
@@ -45,6 +46,44 @@ export default function MyChats({fetchAgain}) {
         fetchChats();
         // eslint-disable-next-line
       }, [fetchAgain]);
+      const getTimeAgo = (createdAt) => {
+        const createdDate = new Date(createdAt);
+        const now = new Date();
+      
+        // Calculate the difference in milliseconds
+        const difference = now.getTime() - createdDate.getTime();
+      
+        // Convert milliseconds to minutes, hours, and days
+        const minutes = Math.floor(difference / (1000 * 60));
+        const hours = Math.floor(difference / (1000 * 60 * 60));
+        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+      
+        // Format the time difference
+        if(minutes<1){
+          return 'Just Now';
+        }
+        if (minutes < 60) {
+          return `${minutes}m ago`;
+        } else if (hours < 24) {
+          return `${hours}h ago`;
+        } else {
+          return `${days}d ago`;
+        }
+      };
+      
+      useEffect(() => {
+        const handleAdded = newGroupChat => {
+            setChats([...chats, newGroupChat]);
+            setUnseen([newGroupChat._id,...unseen]);
+            fetchChats();
+        };
+        socket.on('added', handleAdded);
+    
+        // Clean up the event listener when the component unmounts
+        return () => {
+            socket.off('added', handleAdded);
+        };
+    });
   return (
     <Box
       display={{ base: selectedChat ? "none" : "flex", md: "flex" }}
@@ -105,7 +144,20 @@ export default function MyChats({fetchAgain}) {
                py={2}
                borderRadius="lg"
                key={i}>
-             <Box
+                
+            <Box display={'flex'} alignItems={'center'}>
+            <Avatar
+              size={'sm'}
+              src={
+                chat.isGroupChat
+                  ? chat.Avatar // Assuming chat.Avatar contains the URL of the group chat's avatar
+                  : chat.users[0]._id === user._id
+                  ? chat.users[1].pic // Assuming chat.users[1].pic contains the URL of the other user's avatar
+                  : chat.users[0].pic // Assuming chat.users[0].pic contains the URL of the other user's avatar
+              }
+              mr={2}
+            />
+            <Box
                
                borderRadius="lg"
                key={i}
@@ -113,18 +165,20 @@ export default function MyChats({fetchAgain}) {
                fontWeight={unseen.find(unseenchat => unseenchat._id === chat._id)&&'1000'}
              >
                <Text fontWeight={unseen.find(unseenchat => unseenchat._id === chat._id)?'900':'normal'}>
+               
                  {chat && !chat.isGroupChat
                    ? getSender(loggedUser, chat.users) :
                    chat && chat.chatName}
                </Text>
-               {chat.latestMessage && (
-                 <Text fontSize="xs" >
-                   <b>{user && chat.latestMessage.sender._id===user._id?"You":chat.latestMessage.sender.name} : </b>
+               {chat && chat.latestMessage && chat.latestMessage.deletedFor && !chat.latestMessage.deletedFor.includes(user._id) && (
+                 <Text fontSize="xs" display={'flex'} >
+                   <b style={{marginRight:'2px'}}>{user && chat.latestMessage.sender._id===user._id?"You":chat.latestMessage.sender.name} : </b>
                    {chat.latestMessage.content.length > 50
                      ? chat.latestMessage.content.substring(0, 51) + "..."
-                     : chat.latestMessage.content}
+                     : (<div style={{display:'flex'}}>{chat.latestMessage.content+" "}<b style={{marginLeft:'5px',color:'gray'}}>{getTimeAgo(chat.latestMessage.createdAt)}</b></div>)}
                  </Text>
                )}  
+            </Box>
             </Box>
                {unseen.find(unseenchat => unseenchat === chat._id) && <Box display={'flex'} alignItems={'center'}><GoDotFill/></Box>}
              </Box>

@@ -56,6 +56,28 @@ const io = new Server(server,{
       socket.join(userData._id);
       socket.emit("connected");
     })
+    socket.on('message deleted',(deleted)=>{
+      console.log("Delete Socket ",deleted.chat.users);
+      if(!deleted.chat.users) return console.log("No users!");
+      console.log("Deleted By ",deleted.byuser);
+      deleted.chat.users.forEach((user)=>{
+        if(user === deleted.byuser){
+          console.log("Deleted By ",deleted.byuser);
+          return ;
+        }
+        console.log("Sending to ",user)
+        socket.in(user).emit('new message deleted',deleted.mId)
+      })
+    })
+    socket.on('group created',(newGroupChat)=>{
+      console.log('Group Created Socket')
+      if(!newGroupChat.users) return console.log('chat.users not defined');
+      newGroupChat.users.forEach(user=>{
+        if(user._id === newGroupChat.groupAdmin) return;
+        console.log('Sending Group Chat to',user.name)
+        socket.in(user._id).emit('added',newGroupChat);
+      })
+    })
     socket.on('join chat',(room)=>{
       socket.join(room);
       console.log("joined room ",room);
@@ -77,6 +99,7 @@ const io = new Server(server,{
         console.log("sending")
         socket.in(user._id).emit("message received",newMessageReceived);
       });
+      
     })
     socket.off("setup",(userData)=>{
       console.log("User Disconnected!");

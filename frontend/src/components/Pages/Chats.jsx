@@ -24,6 +24,9 @@ export default function Chats() {
       localStorage.removeItem("userInfo");
       history("/");
     }
+    useEffect(()=>{
+      document.title = `Tik-Talk (${user.name})${notifications.length ? `(${notifications.length})` : ''}`;
+    },[notifications])
   return (
     <Box  w={'100%'} bg={'blue.100'}>
       <Box

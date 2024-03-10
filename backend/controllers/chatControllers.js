@@ -1,7 +1,7 @@
 import { populate } from "dotenv";
 import { Chat } from "../models/chatModel.js";
 import User from "../models/userModel.js";
-
+import mongoose from "mongoose";
 const accessChat = async(req,res)=>{
     // console.log("Chat Creating!");
     const { userId } = req.body;
@@ -82,6 +82,7 @@ const createGroupChats = async(req,res)=>{
             users:users,
             isGroupChat: true,
             groupAdmin:req.user,
+            Avatar : req.body.image
         });
         const FullGroupChat =  await Chat.findOne({_id:groupChat._id}).populate("users","-password").populate("groupAdmin","-password");
         res.status(200).send(FullGroupChat);
@@ -128,5 +129,15 @@ const removeGroup = async(req,res)=>{
         else{
             res.status(200).send(removed);
         }
+}
+const deleteChat = async(req,res)=>{
+    const {chatId} = req.body;
+    const deleted = await Chat.findByIdAndDelete({chatId});
+    if(deleted){
+        res.send({message:'Deleted Chat Successfully!'})
+    }
+    else{
+        res.send({message:'Chat Not Found!'});
+    }
 }
 export {accessChat,fetchChats,createGroupChats,renameGroup,addGroup,removeGroup}

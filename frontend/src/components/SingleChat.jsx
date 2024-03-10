@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from 'react'
 import { ChatState } from '../Context/chatProvider'
-import { Avatar, Box,  FormControl, IconButton, Input, Spinner, Text,  useMediaQuery,  useToast } from '@chakra-ui/react';
+import { Avatar, Box,  FormControl, IconButton, Input, Menu, MenuButton, MenuItem, MenuList, Spinner, Text,  useMediaQuery,  useToast } from '@chakra-ui/react';
 import { IoMdArrowBack } from 'react-icons/io';
 import { getSender, getSenderFull } from '../config/ChatLogics';
 import Profile from './Miscelleneous/Profile';
-import {BsEyeFill,BsSendFill } from 'react-icons/bs';
+import {BsEyeFill,BsSendFill, BsThreeDots } from 'react-icons/bs';
 import UpdateGroupChatModal from './Miscelleneous/UpdateGroupModal';
 import axios from 'axios';
 import ScrollableChat from './ScrollableChat';
 import './styles.css';
 import { socket } from '../socket';
 import animationData from "../animations/typing.json"
-import { Toaster } from 'react-hot-toast';
+import { Toaster,toast as Toast } from 'react-hot-toast';
 import Lottie from "react-lottie"; 
 var  selectedChatCompare;
 export default function SingleChat({ fetchAgain, setFetchAgain }) {
@@ -50,7 +50,7 @@ export default function SingleChat({ fetchAgain, setFetchAgain }) {
                 },
             }
             setLoading(true);
-            const { data } = await axios.get(`http://localhost:8000/message/${selectedChat._id}`, config);
+            const { data } = await axios.get(`${process.env.REACT_APP_URL}/message/${selectedChat._id}`, config);
             // // console.log(data);
             setNewMessage("");
             setMessages(data);
@@ -68,6 +68,9 @@ export default function SingleChat({ fetchAgain, setFetchAgain }) {
             })
         }
     }
+    useEffect(()=>{
+        fetchMessages();
+    },[fetchAgain])
     async function sendMessageButton(){
         socket.emit('stop typing',selectedChat._id)
             try {
@@ -76,7 +79,7 @@ export default function SingleChat({ fetchAgain, setFetchAgain }) {
                         Authorization: `Bearer ${user.token}`,
                     },
                 }
-                const { data } = await axios.post(`${process.env.APP_URL}/message/sendmessage`, {
+                const { data } = await axios.post(`${process.env.REACT_APP_URL}/message/sendmessage`, {
                     content: newMessage,
                     chatId: selectedChat._id
                 }, config);
@@ -85,6 +88,7 @@ export default function SingleChat({ fetchAgain, setFetchAgain }) {
                 socket.emit("new message",data);
                 setMessages([...messages, data]);
                 setFetchAgain(true);
+                setSelectedChat(selectedChat)
             }
             catch (e) {
                 toast({
@@ -106,15 +110,17 @@ export default function SingleChat({ fetchAgain, setFetchAgain }) {
                         Authorization: `Bearer ${user.token}`,
                     },
                 }
-                const { data } = await axios.post(`${process.env.APP_URL}/message/sendmessage`, {
+                const { data } = await axios.post(`${process.env.REACT_APP_URL}/message/sendmessage`, {
                     content: newMessage,
                     chatId: selectedChat._id
                 }, config);
                 // // console.log(data);
+                setFetchAgain(true);
                 setNewMessage("");
                 socket.emit("new message",data);
                 setMessages([...messages, data]);
-                setFetchAgain(true);
+                
+                setSelectedChat(selectedChat)
             }
             catch (e) {
                 toast({
@@ -154,6 +160,42 @@ export default function SingleChat({ fetchAgain, setFetchAgain }) {
             setNotifications(updatedNotifications);
         }
     };
+    const clearChat = async()=>{
+        try{
+            const config = {
+                headers: {
+                    Authorization: `Bearer ${user.token}`,
+                },
+            }
+            const { data } = await axios.post(`${process.env.REACT_APP_URL}/message/deleteAll`, {
+               chatId:selectedChat._id
+            }, config);
+            console.log(data);
+            if(data.success){
+                setMessages([]);
+                Toast.success("Chat Cleared Successfully!",{style:{color:'black',backgroundColor:'blanchedalmond'},position:'top-center'});
+            }
+            else{
+                // toast({
+                //     title: 'Error Occured!',
+                //     description: "Couldn't clear chat! try again later!",
+                //     status: 'error',
+                //     duration: 3000,
+                //     isClosable: true,
+                //     position: 'bottom'
+                // })
+            }
+        }catch(e){
+            toast({
+                title: 'Error Occured!',
+                description: "Couldn't clear chat! try again later!",
+                status: 'error',
+                duration: 3000,
+                isClosable: true,
+                position: 'bottom'
+            })
+        }
+    }
     useEffect(() => { 
         fetchMessages();
         selectedChatCompare = selectedChat;
@@ -171,15 +213,34 @@ export default function SingleChat({ fetchAgain, setFetchAgain }) {
                     setNotifications([newMessageReceived, ...notifications]);
                     
                     setUnseen([newMessageReceived.chat._id,...unseen]);
+                    setFetchAgain(true)
                 }
                 // removeNotificationsForSelectedChat();
             } else {
-                setMessages(prevMessages => [...prevMessages, newMessageReceived]);
+                setMessages([...messages, newMessageReceived]);
             }
+            setFetchAgain(true)
         });
+        socket.on('new message deleted',(mId)=>{
+            console.log("Message Delete hua");
+            setMessages(messages.filter(m=> m._id!=mId));
+        })
         socket.on("typing",()=>{setIsTyping(true)})
         socket.on("stop typing",()=>{setIsTyping(false)})
      })
+     useEffect(()=>{
+        const visMsg = messages.filter(m => {
+            // Check if message has a deletedFor array
+            if (m.deletedFor) {
+                // If deletedFor array exists, check if user ID is not included
+                return !m.deletedFor.includes(user._id);
+            } else {
+                // If deletedFor array does not exist, include the message
+                return true;
+            }
+        });
+        setMessages(visMsg);
+     },[])
     return (< >
     <Toaster/>
         {!selectedChat ? (
@@ -198,17 +259,41 @@ export default function SingleChat({ fetchAgain, setFetchAgain }) {
                     icon={<IoMdArrowBack />}
                     onClick={() => { setSelectedChat("") }} />
                 {selectedChat && !selectedChat.isGroupChat ? (<>
-                    <Text fontSize={{sm:'26px',md:'34px'}}>{getSender(user, selectedChat.users)}</Text>
+                    <Box display={'flex'} alignItems={'center'}>
+                    <Avatar src={getSenderFull(user,selectedChat.users).pic} mr={2} size={'sm'}/>
+                    <Text fontSize={{sm:'24px',md:'30px'}}>{getSender(user, selectedChat.users)}</Text>
+                    </Box>
+                    <Box display={'flex'}>
                     <Profile user={
                         getSenderFull(user, selectedChat.users)
                     }><IconButton display={'flex'}
                         icon={<BsEyeFill size={'24'} />}
                         /></Profile>
+                        <Menu>
+                            <MenuButton><BsThreeDots style={{display:'flex',alignItems:'center',marginTop:'5px',marginLeft:'4px'}}/></MenuButton>
+                            <MenuList style={{fontSize:'14px',backgroundColor:'white',color:'black',width:'5%'}} >
+                            <MenuItem onClick={clearChat}>Clear Chat</MenuItem>
+                            <MenuItem>Delete Chat</MenuItem>
+                            <MenuItem>Block</MenuItem></MenuList>
+                        </Menu>
+                    </Box>
 
                 </>) : (<>
 
-                    <Text fontSize={{ base: '24px', md: '34px' }}>{selectedChat.chatName}</Text>
+                    <Box display={'flex'} alignItems={'center'}>
+                    <Avatar src={selectedChat.Avatar} mr={2}  size={'sm'}/>
+                    <Text fontSize={{sm:'24px',md:'30px'}}>{selectedChat.chatName}</Text>
+                    </Box>
+                    <Box display={'flex'}>
                     <UpdateGroupChatModal fetchAgain={fetchAgain} setFetchAgain={setFetchAgain} />
+                    <Menu>
+                            <MenuButton><BsThreeDots style={{display:'flex',alignItems:'center',marginTop:'5px',marginLeft:'4px'}}/></MenuButton>
+                            <MenuList style={{fontSize:'14px',backgroundColor:'white',color:'black',width:'5%'}}>
+                            <MenuItem onClick={clearChat}>Clear Chat</MenuItem>
+                            <MenuItem>Delete Chat</MenuItem>
+                            <MenuItem>Leave Group</MenuItem></MenuList>
+                        </Menu>
+                    </Box>
                     {/* */}
                 </>)}
             </Text>
@@ -231,10 +316,9 @@ export default function SingleChat({ fetchAgain, setFetchAgain }) {
                     alignSelf={'center'}
                     margin={'auto'}
                     color='black'
-                /> : (
-                <div className="messages">
-                    <ScrollableChat messages={messages} />
-                </div>
+                /> : ( messages.length>0 ?<div className="messages">
+                <ScrollableChat messages={messages} setMessages={setMessages} />
+            </div>:<div style={{display:'flex',height:'100%',width:'100%',alignItems:'center',justifyContent:'center',color:'black',fontSize:'30px'}}>No Messages to show Please type and start </div>
                 )}
                     {isTyping?<div style={{display:'flex',alignItems:'center'}}>
                   <Avatar width={38} height={38} src={user && user.picture} />      

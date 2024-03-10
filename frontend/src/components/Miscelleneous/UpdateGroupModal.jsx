@@ -15,6 +15,7 @@ import {
   Box,
   IconButton,
   Spinner,
+  Avatar,
 } from "@chakra-ui/react";
 import axios from "axios";
 import { useState } from "react";
@@ -47,7 +48,7 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
           Authorization: `Bearer ${user.token}`,
         },
       };
-      const { data } = await axios.get(`http://localhost:8000/users?search=${search}`, config);
+      const { data } = await axios.get(`${process.env.REACT_APP_URL}/users?search=${search}`, config);
       // console.log(data);
       setLoading(false);
       setSearchResult(data);
@@ -75,7 +76,7 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
         },
       };
       const { data } = await axios.put(
-        `http://localhost:8000/chat/rename`,
+        `${process.env.REACT_APP_URL}/chat/rename`,
         {
           chatId: selectedChat._id,
           chatName: groupChatName,
@@ -133,7 +134,7 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
         },
       };
       const { data } = await axios.put(
-        `http://localhost:8000/chat/groupadd`,
+        `${process.env.REACT_APP_URL}/chat/groupadd`,
         {
           chatId: selectedChat._id,
           userId: user1._id,
@@ -178,7 +179,7 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
         },
       };
       const { data } = await axios.put(
-        `http://localhost:8000/chat/groupremove`,
+        `${process.env.REACT_APP_URL}/chat/groupremove`,
         {
           chatId: selectedChat._id,
           userId: user1._id,
@@ -217,6 +218,7 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
             d="flex"
             justifyContent="center"
           >
+            <Avatar src={selectedChat.Avatar} mr={2} size={'md'}/>
             {selectedChat.chatName}
           </ModalHeader>
 
@@ -227,7 +229,7 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
                 <UserBadgeItem
                   key={u._id}
                   user={u}
-                  admin={selectedChat.groupAdmin}
+                  admin={selectedChat.groupAdmin._id}
                   handleFunction={() => handleRemove(u)}
                 />
               ))}
@@ -243,6 +245,7 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
                 variant="solid"
                 colorScheme="teal"
                 ml={1}
+                mb={2}
                 isLoading={renameloading}
                 onClick={handleRename}
               >

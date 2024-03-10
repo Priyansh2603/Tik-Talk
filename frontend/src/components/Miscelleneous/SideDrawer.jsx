@@ -44,10 +44,6 @@ export default function SideDrawer() {
     useEffect(()=>{
         search();
     },[searchString])
-    const removeNotificationsForSelectedChat = () => {
-      // Filter out notifications where the chat ID doesn't match the selected chat ID
-      
-  };
     async function search(){
         // e.preventDefault();
         if(searchString===''){
@@ -58,7 +54,7 @@ export default function SideDrawer() {
           setLoading(true);
             // console.log(user && user.token);
             const token = user.token
-            const {data} = await axios.get(  `http://localhost:8000/users/?search=${searchString}`,{
+            const {data} = await axios.get(  `${process.env.REACT_APP_URL}/users/?search=${searchString}`,{
                 headers:{
                     "Content-type": "application/json",
                     Authorization: `Bearer ${token}`,
@@ -79,6 +75,7 @@ export default function SideDrawer() {
         // console.log(user);
         setSearchResults([]);
         setSearchString("");
+        // setSelectedChat()
         onClose();
         const config={
           headers:{
@@ -86,7 +83,7 @@ export default function SideDrawer() {
             Authorization : `Bearer ${user.token}`
           }
         }
-        const {data} = await axios.post(`${process.env.APP_URL}/chat`,{userId:id},{
+        const {data} = await axios.post(`${process.env.REACT_APP_URL}/chat`,{userId:id},{
           headers:{
             "Content-type": "application/json",
             Authorization: `Bearer ${user.token}`,
@@ -109,6 +106,7 @@ export default function SideDrawer() {
         if (!existingChat) {
           // If the chat doesn't exist, add it to the beginning of the chats array
           setChats([data[0], ...chats]);
+          setSelectedChat(data[0])
         } else {
           // If the chat exists, set it as the selected chat
           const updatedNotifications = notifications.filter(notification => {

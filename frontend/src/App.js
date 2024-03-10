@@ -7,6 +7,7 @@ import Homepage from './components/Pages/Homepage';
 import { ChatState } from './Context/chatProvider';
 import Chats from './components/Pages/Chats';
 import './App.css'
+import { Toaster } from 'react-hot-toast';
 export default function App() {
   // const [isConnected, setIsConnected] = useState(socket.connected);
   // const [fooEvents, setFooEvents] = useState([]);
@@ -49,7 +50,7 @@ export default function App() {
   // console.log(user);
   return (
     <div className="App">
-
+      <Toaster/>
       <Routes>
         {/* <Route path="/" element={<Home/>}/> */}
         <Route path="/" element={user?<Homepage/>:<Login/>}/>
