@@ -8,8 +8,8 @@ import { ChatState } from './Context/chatProvider';
 import Chats from './components/Pages/Chats';
 import './App.css'
 import { Toaster } from 'react-hot-toast';
-import VideoCall from './components/calling/VideoCall';
-import IncomingCall from './components/calling/IncomingCall';
+// import VideoCall from './components/calling/VideoCall';
+// import IncomingCall from './components/calling/IncomingCall';
 export default function App() {
   // const [isConnected, setIsConnected] = useState(socket.connected);
   // const [fooEvents, setFooEvents] = useState([]);
