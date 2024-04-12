@@ -65,19 +65,20 @@ const io = new Server(server,{
           console.log("Deleted By ",deleted.byuser);
           return ;
         }
-        console.log("Sending to ",user)
+        // console.log("Sending to ",user)
         socket.in(user).emit('new message deleted',deleted.mId)
       })
     })
     socket.on('group created',(newGroupChat)=>{
-      console.log('Group Created Socket')
+      // console.log('Group Created Socket')
       if(!newGroupChat.users) return console.log('chat.users not defined');
       newGroupChat.users.forEach(user=>{
         if(user._id === newGroupChat.groupAdmin) return;
-        console.log('Sending Group Chat to',user.name)
+        // console.log('Sending Group Chat to',user.name)
         socket.in(user._id).emit('added',newGroupChat);
       })
     })
+    
     socket.on('join chat',(room)=>{
       socket.join(room);
       console.log("joined room ",room);
@@ -90,17 +91,31 @@ const io = new Server(server,{
       console.log("stopped typing")
       socket.in(room).emit("stop typing")
     })
+    // socket.on('callUser',(data)=>{
+    //   console.log(data);
+    //   var chat = data.chat;
+    //   if(!chat.users) return console.log('chat.users not defined');
+    //   chat.users.forEach(user => {
+    //     if(user._id === data.from._id) return ;
+    //     // console.log("sending")
+    //     console.log('Calling ',user)
+    //     socket.in(user._id).emit("incomingCall",{from:data.from,chat:chat,signal:data.signal});
+    //   });
+    // })
     socket.on('new message',(newMessageReceived)=>{
       console.log("New message came ");
       var chat = newMessageReceived.chat;
       if(!chat.users) return console.log('chat.users not defined');
       chat.users.forEach(user => {
         if(user._id === newMessageReceived.sender._id) return ;
-        console.log("sending")
+        // console.log("sending")
         socket.in(user._id).emit("message received",newMessageReceived);
       });
       
     })
+    // socket.on("answerCall", (data) => {
+    //   socket.in(data.to).emit("callAccepted", data.signal)
+    // });
     socket.off("setup",(userData)=>{
       console.log("User Disconnected!");
       socket.leave(userData._id);

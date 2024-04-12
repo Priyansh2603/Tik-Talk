@@ -174,6 +174,7 @@ export default function GroupModal({children}) {
               setOverlay(<OverlayTwo />)
               onOpen()
             }}
+            width={{base:'140px',md:'160px'}}
           >
             {children}
           </Button>

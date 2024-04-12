@@ -16,6 +16,7 @@ import {
   IconButton,
   Spinner,
   Avatar,
+  Text,
 } from "@chakra-ui/react";
 import axios from "axios";
 import { useState } from "react";
@@ -23,8 +24,8 @@ import { ChatState } from "../../Context/chatProvider";
 import UserBadgeItem from "../UserAvatar/UserBadge";
 import UserListItem from "../UserAvatar/UserListItem";
 import { BsEyeFill, BsViewList } from "react-icons/bs";
-
-const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
+var handleRemove;
+const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain, children }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [groupChatName, setGroupChatName] = useState();
   const [search, setSearch] = useState("");
@@ -159,7 +160,7 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
     setGroupChatName("");
   };
 
-  const handleRemove = async (user1) => {
+  handleRemove = async (user1) => {
     if (selectedChat.groupAdmin._id !== user._id && user1._id !== user._id) {
       toast({
         title: "Only admins can remove someone!",
@@ -207,8 +208,8 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
 
   return (
     <>
-      <IconButton d={{ base: "flex" }}  icon={<BsEyeFill size={24}/>} onClick={onOpen} />
-
+      {/* <IconButton d={{ base: "flex" }}  icon={<BsEyeFill size={{base:''}}/>} onClick={onOpen} /> */}
+      <Text onClick={onOpen}>{children}</Text>
       <Modal onClose={onClose} isOpen={isOpen} isCentered>
         <ModalOverlay />
         <ModalContent>
@@ -282,5 +283,5 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
     </>
   );
 };
-
+export {handleRemove};
 export default UpdateGroupChatModal;

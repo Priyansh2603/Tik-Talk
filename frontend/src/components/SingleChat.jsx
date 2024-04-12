@@ -1,18 +1,22 @@
 import React, { useEffect, useState } from 'react'
 import { ChatState } from '../Context/chatProvider'
-import { Avatar, Box,  FormControl, IconButton, Input, Menu, MenuButton, MenuItem, MenuList, Spinner, Text,  useMediaQuery,  useToast } from '@chakra-ui/react';
+import { Avatar, Box,  FormControl, Icon, IconButton, Input, Menu, MenuButton, MenuItem, MenuList, Spinner, Text,  useMediaQuery,  useToast } from '@chakra-ui/react';
 import { IoMdArrowBack } from 'react-icons/io';
 import { getSender, getSenderFull } from '../config/ChatLogics';
 import Profile from './Miscelleneous/Profile';
 import {BsEyeFill,BsSendFill, BsThreeDots } from 'react-icons/bs';
+import { handleRemove } from './Miscelleneous/UpdateGroupModal';
 import UpdateGroupChatModal from './Miscelleneous/UpdateGroupModal';
 import axios from 'axios';
+import { IoIosVideocam } from "react-icons/io";
 import ScrollableChat from './ScrollableChat';
 import './styles.css';
 import { socket } from '../socket';
 import animationData from "../animations/typing.json"
 import { Toaster,toast as Toast } from 'react-hot-toast';
 import Lottie from "react-lottie"; 
+import { MdCall } from "react-icons/md";
+import { useNavigate } from 'react-router-dom';
 var  selectedChatCompare;
 export default function SingleChat({ fetchAgain, setFetchAgain }) {
     const [socketConnection, setSocketConnection] = useState(false);
@@ -227,6 +231,8 @@ export default function SingleChat({ fetchAgain, setFetchAgain }) {
         })
         socket.on("typing",()=>{setIsTyping(true)})
         socket.on("stop typing",()=>{setIsTyping(false)})
+        
+            
      })
      useEffect(()=>{
         const visMsg = messages.filter(m => {
@@ -241,38 +247,52 @@ export default function SingleChat({ fetchAgain, setFetchAgain }) {
         });
         setMessages(visMsg);
      },[])
+     const navigate = useNavigate();
     return (< >
     <Toaster/>
         {!selectedChat ? (
             <Box fontSize={'3xl'} display={'flex'} width={'100%'} height={'100%'} alignItems={'center'} justifyContent={"center"}>Please Select the user to start the chat</Box>
         ) : (<Box height={'100%'} width={'100%'} display={'flex'} flexDir={'column'} maxHeight={'100%'}>
-            <Text fontSize={{ base: '28px', md: '30px' }}
-                pb={3}
-                px={2}
+            <Text fontSize={{ base: '24px', md: '28px' }}
+                pb={2}
+                px={0.5}
                 width={'100%'}
                 fontFamily={'Work sans'}
                 display={'flex'}
                 justifyContent={{ base: 'space-between' }}
                 alignItems={'center'}
             >
-                <IconButton display={{ base: 'flex', md: 'none' }}
-                    icon={<IoMdArrowBack />}
-                    onClick={() => { setSelectedChat("") }} />
+                
                 {selectedChat && !selectedChat.isGroupChat ? (<>
                     <Box display={'flex'} alignItems={'center'}>
-                    <Avatar src={getSenderFull(user,selectedChat.users).pic} mr={2} size={'sm'}/>
-                    <Text fontSize={{sm:'24px',md:'30px'}}>{getSender(user, selectedChat.users)}</Text>
+                    <Text display={{base:'flex',md:'none'}} mr={3} alignItems={'center'}> <IoMdArrowBack size={16}
+                    onClick={() => { setSelectedChat("") }} /></Text>
+                    <Avatar src={getSenderFull(user,selectedChat.users).pic} mr={2} size={{base:'xs',md:'sm'}}/>
+                    <Text fontSize={{base:'16px',md:'24px'}}>{getSender(user, selectedChat.users)}</Text>
                     </Box>
-                    <Box display={'flex'}>
-                    <Profile user={
-                        getSenderFull(user, selectedChat.users)
-                    }><IconButton display={'flex'}
-                        icon={<BsEyeFill size={'24'} />}
-                        /></Profile>
+                    <Box display={'flex'} alignItems={'center'}>
+                        <Icon as={MdCall} cursor={'pointer'} onClick={()=>toast({title: 'Oops Not Possible!',
+                        description: "Call Not Implemented Yet! stay tuned for further updates, enjoy messaging till then 😉!",
+                        status: 'info',
+                        icon: "🫣",
+                        duration: 5000,
+                        isClosable: true,
+                        position: 'top-right'})} boxSize={6} mr={2}/>
+                        <Icon
+                         onClick={()=>toast({title: 'Oops Not Possible!',
+                         description: "Video Call Not Implemented Yet! stay tuned for further updates, enjoy messaging till then 😉!",
+                         status: 'info',
+                         icon: "🫣",
+                         duration: 5000,
+                         isClosable: true,
+                         position: 'top-right'})}
+                        // onClick={()=>{navigate("/videocall")}} 
+                        cursor={'pointer'} as={IoIosVideocam} boxSize={6}/>
                         <Menu>
-                            <MenuButton><BsThreeDots style={{display:'flex',alignItems:'center',marginTop:'5px',marginLeft:'4px'}}/></MenuButton>
+                            <MenuButton><BsThreeDots size={22} style={{display:'flex',alignItems:'center',marginLeft:'4px',transform:'rotate(90deg)'}}/></MenuButton>
                             <MenuList style={{fontSize:'14px',backgroundColor:'white',color:'black',width:'5%'}} >
                             <MenuItem onClick={clearChat}>Clear Chat</MenuItem>
+                            <MenuItem><Profile user={getSenderFull(user, selectedChat.users)}>Profile</Profile></MenuItem>
                             <MenuItem>Delete Chat</MenuItem>
                             <MenuItem>Block</MenuItem></MenuList>
                         </Menu>
@@ -281,17 +301,37 @@ export default function SingleChat({ fetchAgain, setFetchAgain }) {
                 </>) : (<>
 
                     <Box display={'flex'} alignItems={'center'}>
-                    <Avatar src={selectedChat.Avatar} mr={2}  size={'sm'}/>
-                    <Text fontSize={{sm:'24px',md:'30px'}}>{selectedChat.chatName}</Text>
+                    <Text display={{base:'flex',md:'none'}} mr={3} alignItems={'center'}> <IoMdArrowBack size={16}
+                    onClick={() => { setSelectedChat("") }} /></Text>
+                    <Avatar src={selectedChat.Avatar} mr={2}  size={{base:'xs',md:'sm'}}/>
+                    <Text fontSize={{base:'15px',md:'24px'}}>{selectedChat.chatName}</Text>
                     </Box>
-                    <Box display={'flex'}>
-                    <UpdateGroupChatModal fetchAgain={fetchAgain} setFetchAgain={setFetchAgain} />
+                    <Box display={'flex'} alignItems={'center'}>
+                    <Icon as={MdCall} cursor={'pointer'} onClick={()=>toast({title: 'Oops Not Possible!',
+                        description: "Call Not Implemented Yet! stay tuned for further updates, enjoy messaging till then 😉!",
+                        status: 'info',
+                        icon: "🫣",
+                        duration: 5000,
+                        isClosable: true,
+                        position: 'top-right'})} boxSize={6} mr={2}/>
+                        <Icon 
+                        // onClick={()=>{navigate("/videocall")}} 
+                        onClick={()=>toast({title: 'Oops Not Possible!',
+                        description: "Video Call Not Implemented Yet! stay tuned for further updates, enjoy messaging till then 😉!",
+                        status: 'info',
+                        icon: "🫣",
+                        duration: 5000,
+                        isClosable: true,
+                        position: 'top-right'})}
+                            // toast("Not Implemented Yet! stay tuned for further updates, enjoy messaging till then 😉!",{Icon:"😉"})}}
+                        cursor={'pointer'} as={IoIosVideocam} boxSize={6} />
                     <Menu>
-                            <MenuButton><BsThreeDots style={{display:'flex',alignItems:'center',marginTop:'5px',marginLeft:'4px'}}/></MenuButton>
+                            <MenuButton><BsThreeDots size={22} style={{display:'flex',alignItems:'center',marginLeft:'4px',transform:'rotate(90deg)'}}/></MenuButton>
                             <MenuList style={{fontSize:'14px',backgroundColor:'white',color:'black',width:'5%'}}>
                             <MenuItem onClick={clearChat}>Clear Chat</MenuItem>
+                            <MenuItem ><UpdateGroupChatModal fetchAgain={fetchAgain} setFetchAgain={setFetchAgain} >Group info</UpdateGroupChatModal></MenuItem>
                             <MenuItem>Delete Chat</MenuItem>
-                            <MenuItem>Leave Group</MenuItem></MenuList>
+                            <MenuItem onClick={()=>{handleRemove(user)}}>Leave Group</MenuItem></MenuList>
                         </Menu>
                     </Box>
                     {/* */}

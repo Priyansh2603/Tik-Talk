@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 import { Route, Routes } from 'react-router-dom';
 import Login from './components/Authentication/Login';
@@ -8,6 +8,8 @@ import { ChatState } from './Context/chatProvider';
 import Chats from './components/Pages/Chats';
 import './App.css'
 import { Toaster } from 'react-hot-toast';
+import VideoCall from './components/calling/VideoCall';
+import IncomingCall from './components/calling/IncomingCall';
 export default function App() {
   // const [isConnected, setIsConnected] = useState(socket.connected);
   // const [fooEvents, setFooEvents] = useState([]);
@@ -48,6 +50,9 @@ export default function App() {
   // }, []);
   const user = ChatState().user;
   // console.log(user);
+  const [incoming,setIncoming] = useState();
+  const [isCall,setIsCall] = useState();
+  const [call,setCall] = useState();
   return (
     <div className="App">
       <Toaster/>
@@ -56,7 +61,9 @@ export default function App() {
         <Route path="/" element={user?<Homepage/>:<Login/>}/>
         <Route path="/login" element={user?<Homepage/>:<Login/>}/>
         <Route path="/register" element={<Register/>}/>
-        <Route path="/chats" element={<Chats/>}/>
+        <Route path="/chats" element={<Chats setIncoming={setIncoming} setIsCall={setIsCall} setCall={setCall}/>}/>
+        {/* <Route path="/videocall" element={<VideoCall chat={incoming} isCall={isCall} call={call}/>}/>
+        <Route path="/incoming" element={<IncomingCall chat={incoming} isCall={isCall} call={call}/>}/> */}
       </Routes>
     </div>
   );

@@ -89,18 +89,19 @@ export default function MyChats({fetchAgain}) {
       display={{ base: selectedChat ? "none" : "flex", md: "flex" }}
       flexDir="column"
       alignItems="center"
-      p={3}
+      p={2}
       bg="black"
       color="white"
+      // height={"91.5vh"}
       w={{ base: "100%", md: "31%" }}
-      borderRadius="lg"
-      borderWidth="1px"
+      // borderRadius="lg"
+      borderWidth="0.5px"
       overflowY={'auto'}
     >
       <Box
-        pb={3}
-        px={3}
-        fontSize={{ base: "28px", md: "30px" }}
+        pb={{base:1,md:3}}
+        px={{base:1,md:2}}
+        fontSize={{ base: "14px", md: "20px" }}
         fontFamily="Work sans"
         display ="flex"
         w="100%"
@@ -111,7 +112,7 @@ export default function MyChats({fetchAgain}) {
         <GroupModal>
           <Button
             d="flex"
-            fontSize={{ base: "15px", md: "10px", lg: "15px" }}
+            fontSize={{ base: "12px", md: "10px", lg: "15px" }}
             rightIcon={<GrAdd />}
           >
             New Group Chat
@@ -121,7 +122,7 @@ export default function MyChats({fetchAgain}) {
       <Box
         d="flex"
         flexDir="column"
-        p={3}
+        p={{base:1.5,md:3}}
         bg="#F8F8F8"
         w="100%"
         h="100%"
@@ -164,7 +165,7 @@ export default function MyChats({fetchAgain}) {
                
                fontWeight={unseen.find(unseenchat => unseenchat._id === chat._id)&&'1000'}
              >
-               <Text fontWeight={unseen.find(unseenchat => unseenchat._id === chat._id)?'900':'normal'}>
+               <Text fontSize={"smaller"} fontWeight={unseen.find(unseenchat => unseenchat._id === chat._id)?'900':'normal'}>
                
                  {chat && !chat.isGroupChat
                    ? getSender(loggedUser, chat.users) :
